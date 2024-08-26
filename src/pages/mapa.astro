@@ -1,0 +1,956 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import "leaflet/dist/leaflet.css";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import "../components/Map/leaflet.Control.Center.css";
+import "leaflet-draw/dist/leaflet.draw.css";
+import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+export const prerender = false;
+---
+
+<MainLayout
+  title="Pozos sépticos - Santa Cruz"
+  description="Servicio de Limpieza de pozos sépticos en el depatramento de Santa Cruz"
+>
+  <main class="w-full relative">
+    <div class="flex flex-col sm:flex-row">
+      <div id="map" class="h-screen w-full">
+        <div
+          id="overlay"
+          class="invisible z-[10000] absolute inset-0 bg-opacity-50 bg-black flex items-center justify-center">
+          <span class="loading loading-spinner text-secondary"></span>
+        </div>
+      </div>
+
+      <div class="mx-1 sm:mx-2 sm:w-60">
+        <div class="my-6 text-center">
+          <input
+            id="URLwhatsapp"
+            type="text"
+            placeholder="Whatsapp"
+            class="input input-bordered input-md input-success"
+          />
+          <button id="putMarker" class="my-2 btn btn-primary !text-white">
+            UBICAR GOOGLE MAPS
+          </button>
+          <hr class="divide-y divide-white mb-6" />
+        </div>
+
+        <!-- Campo de entrada para coordenadas del polígono -->
+        <form
+          id="savePolygon"
+          action="http://127.0.0.1:8000/api/v1/areasfactor/"
+          method="POST"
+        >
+          <div class="input-container text-center">
+            <textarea
+              id="polygon-coordinates"
+              name="polygon"
+              placeholder="Ingrese las coordenadas"
+              class="textarea textarea-bordered w-full h-24"></textarea>
+            <button
+              type="button"
+              id="submit-coordinates"
+              class="btn btn-sm btn-accent !text-white mt-1"
+            >
+              Dibujar Polígono
+            </button>
+            <div class="mt-4 flex">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Zona"
+                class="input input-sm input-bordered w-full mr-2"
+              />
+              <input
+                type="text"
+                id="factor"
+                name="factor"
+                placeholder="Factor"
+                class="input input-sm input-bordered w-full"
+              />
+            </div>
+            <button
+              type="submit"
+              id="add-area"
+              class="btn btn-md btn-secondary !text-white mt-2">
+              Agregar Zona a Base de Datos
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Precio-->
+    <div
+      id="modalPrecio"
+      class="invisible bg-white rounded-lg absolute centrear-w-absolute top-2 z-[1000] sombra">
+      
+      <!-- Modal header -->
+      <div id="modal-header" class="flex justify-end cursor-move">
+        <button
+          id="xModal"
+          type="button"
+          class="btn btn-sm btn-circle btn-ghost"
+        >
+          ✕
+        </button>
+      </div>
+      <!-- Modal body -->
+      <table
+        id="tPrecios"
+        class="table-auto font-light text-xs text-center mx-6"
+      >
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6">Origen</th>
+            <th class="px-2">Dist(km)</th>
+            <th class="px-2">T.(min)</th>
+          </tr>
+        </thead>
+        <tbody id="tbValores" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6"></th>
+            <th class="px-2">Precio Dist.</th>
+            <th class="px-2">Precio T.</th>
+          </tr>
+        </thead>
+        <tbody id="tbPrecios" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6"></th>
+            <th class="px-2">Menor Dist.</th>
+            <th class="px-2">Factor</th>
+          </tr>
+        </thead>
+        <tbody id="tbMenor" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6">Ajuste</th>
+            <th class="px-2">Precio Sugerido</th>
+            <th class="px-2">Precio Facturado</th>
+          </tr>
+        </thead>
+        <tbody id="tbFinal" class="bg-gray-100"> </tbody>
+      </table>
+
+      <div class="max-w-xs p-4">
+        <div class="flex flex-row h-max">
+          <div class="w-1/2 mx-auto mt-1 mr-1 text-center">
+            <label class="input input-bordered input-sm flex mb-2 mr-3">
+              <input
+                id="formName"
+                type="text"
+                class="grow"
+                placeholder="Nombre"
+              />
+            </label>
+
+            <label class="input input-bordered input-sm flex mb-2 mr-3 ">
+              <input
+                id="formPhone"
+                type="text"
+                class="grow"
+                placeholder="Teléfono"
+              />
+            </label>
+
+            <label class="input input-bordered input-sm flex mr-3">
+              <input
+                id="formCost"
+                type="text"
+                class="grow"
+                placeholder="Precio"
+              />
+            </label>
+          </div>
+          
+          <div class="my-auto text-xs">
+            <div>Precio Base: <span id="p_base">PRECIO BASE</span> Bs.</div>
+            <div>Precio Km: <span id="p_km">PRECIO KM BASE</span> Bs/km.</div>
+            <div>Precio Tiempo: <span id="p_tiempo">PRECIO TIEMPO</span> Bs/min.</div>
+          </div>
+        </div>
+        <button id="saveData" class="btn btn-accent btn-sm !text-white mt-2 w-full">Guardar Datos</button>
+      </div>
+
+      <!-- Precio para limpieza de un pozo y cámara séptica de tipo vivienda.</h4> -->
+    </div>
+  </main>
+  <style is:global>
+      .puntos {
+       @apply ml-2 inline-block border-black border-2 w-4 h-4 text-center rounded-full;
+     }
+  </style>
+  <script>
+    // Convertir el precio en una cadena JSON y luego pasarlo al script
+    import {
+      Map,
+      tileLayer,
+      Marker,
+      control,
+      FeatureGroup,
+      Control,
+      Polygon,
+      Draw,
+      LatLng,
+      Layer,
+      markerClusterGroup,
+    } from "leaflet";
+    import "../components/Map/leaflet.Control.Center";
+    import {
+      iconRed,
+      locateOptions,
+    } from "../components/Map/ObjectLeaflet.astro";
+    import "leaflet-control-custom";
+    import { inscrito } from "../components/utils/inscrito";
+    import {
+      findRoutes,
+      getPoligons,
+      getPrices,
+    } from "../components/utils/findPrices";
+    import "leaflet-draw";
+    import "leaflet.control.layers.tree";
+
+    import type {
+      LeafletMouseEvent,
+      LocationEvent,
+      ErrorEvent,
+      LeafletEvent,
+      Path,
+      MarkerClusterGroupOptions
+    } from "leaflet";
+    import type { Poligonos, Precios } from "../types/types";
+    import { createToast } from "../components/utils/toast";
+    import { postData } from "../components/utils/postCliente";
+    import { fetchClients } from "../components/utils/getClients";
+    import 'leaflet.markercluster';
+    import 'leaflet.markercluster.layersupport';
+
+    let marker: Marker;
+    const colorPath = ["red", "green", "orange", "cyan"];
+    const overlay = document.getElementById("overlay") as HTMLDivElement;
+
+    const colores = [
+      "#B0B0B0",
+      "#FF5733",
+      "#286d31",
+      "#3357FF",
+      "#A633FF",
+      "#FF8333",
+      "#33FFD5",
+      "#D5FF33",
+      "#33A6FF",
+      "#5733FF",
+      "#787878",
+      "#FF33A6",
+    ];
+
+    const map = new Map("map", {
+      tap: false,
+      center: [-17.784071, -63.180522],
+      zoom: 12,
+      zoomControl: false,
+    });
+
+    // map.getContainer().style.cursor = "crosshair";
+
+    const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    const esri = tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 19,
+        attribution:
+          "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+      }
+    );
+
+
+    const putMarker = document.getElementById("putMarker") as HTMLButtonElement;
+    putMarker.disabled = true;
+
+    const areaFact = await fetch("http://127.0.0.1:8000/api/v1/areasfactor/")
+      .then((r) => r.json())
+      .then((data: Poligonos[]) => {
+        return data;
+      });
+
+    let polygonLayers: { label: string; layer: Polygon }[] = [];
+
+    // Añadir todos los polígonos obtenidos desde la API al mapa
+    areaFact.forEach((polygonData, index) => {
+      const apiPolygonCoords = polygonData.polygon;
+      const apiPolygonLatLngs = apiPolygonCoords.map(
+        (coord) => new LatLng(coord[0], coord[1])
+      );
+      polygonLayers.push({
+        label: `<span style="color: ${colores[index % colores.length]}">   ${polygonData.name} ${polygonData.factor}</span>`,
+        layer: new Polygon(apiPolygonLatLngs, { color: colores[index] }),
+      });
+    });
+
+    // Cargar los clientes de la base de datos
+    let groupCot, groupEje;
+    
+    ({ groupEje, groupCot } = await fetchClients ());
+    
+    var options = {
+      spiderLegPolylineOptions: { weight: 0 }, // Lienas del spider
+      // spiderfyOnMaxZoom: $("#spiderfyOnMaxZoom-select").val() === "true",
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: false,
+      removeOutsideVisibleBounds: true,
+      // document.getElementById("zoomToBoundsOnClick-select").value === "true",
+      // showCoverageOnHover: document.getElementById("showCoverageOnHover-select").value === "true",
+      showCoverageOnHover: true,
+      disableClusteringAtZoom: 18,
+      maxClusterRadius: 50,
+      // maxClusterRadius: parseInt(document.getElementById("maxClusterRadius-select").value),
+      spiderfyDistanceMultiplier: 1,
+      chunkedLoading: true,
+      chunkInterval: 100,
+      // chunkProgress: updateProgressBar
+      singleAddRemoveBufferDuration: 200,
+    };
+    
+    var mcgLayerSupportGroup = markerClusterGroup.layerSupport(options);
+    mcgLayerSupportGroup.addTo(map);
+    
+    mcgLayerSupportGroup.checkIn(groupCot);
+    mcgLayerSupportGroup.checkIn(groupEje);
+
+    // groupEje.forEach((g) => {
+    //   g.addTo(map);
+    // });
+
+
+    var baseTree = {
+      label: "<strong>Capas Base</strong>",
+      children: [
+        { label: "OpenStreetMap", layer: osm },
+        { label: "Esri World Imagery", layer: esri },
+      ],
+    };
+
+    var overlayTree = {
+      label: "<strong> Zonas / Clientes</strong>",
+      selectAllCheckbox: 'Un/select all',
+      children: [
+        {
+          label: " Factor por zona",
+          selectAllCheckbox: true,
+          children: polygonLayers,
+        },
+        {
+          label: " Ejecutados",
+          selectAllCheckbox: 'Un/select all',
+          collapsed: true,
+          children: [
+          {label: `<div class="puntos bg-precio300">&zwnj;</div>...300`, layer: groupEje[0]},
+          {label: `<div class="puntos bg-precio350">&zwnj;</div>\xa0\xa0\xa0350`, layer: groupEje[1]},
+          {label: `<div class="puntos bg-precio400">&zwnj;</div>\xa0\xa0\xa0400`, layer: groupEje[2]},
+          {label: `<div class="puntos bg-precio450">&zwnj;</div>\xa0\xa0\xa0450`, layer: groupEje[3]},
+          {label: `<div class="puntos bg-precio500">&zwnj;</div>\xa0\xa0\xa0500`, layer: groupEje[4]},
+          {label: `<div class="puntos bg-precio600">&zwnj;</div>\xa0\xa0\xa0600`, layer: groupEje[5]},
+          {label: `<div class="puntos bg-precio700">&zwnj;</div>\xa0\xa0\xa0700`, layer: groupEje[6]},
+          {label: `<div class="puntos bg-precio800">&zwnj;</div>\xa0\xa0\xa0800`, layer: groupEje[7]},
+          {label: `<div class="puntos bg-precio900">&zwnj;</div>\xa0\xa0\xa0900`, layer: groupEje[8]},
+          {label: `<div class="puntos ml-0 bg-precio1000">&zwnj;</div>\xa01000...`, layer: groupEje[9]},
+          {label: `<div class="puntos ml-0 bg-precioNegro">&zwnj;</div>\xa0\xa0L.N`, layer: groupEje[10]},
+          ],
+        },
+        {
+          label: " Cotizados",
+          selectAllCheckbox: 'Un/select all',
+          collapsed: true,
+          children: [
+            {label: "Administrador" , layer: groupCot[0]},
+            {label: "Cliente Confirma" , layer: groupCot[1]},
+            {label: "Cliente Cancela" , layer: groupCot[2]},
+          ],
+        }
+        
+      ],
+    };
+    // Agregar el control de capas al mapa con el plugin de árbol leaflet.control.layers.tree
+    control.layers
+      .tree(baseTree, overlayTree, {
+        position: "bottomleft",
+        collapsed: false,
+      })
+      .addTo(map);
+
+    control
+      .custom({
+        position: "bottomcenter",
+        content: `<div>
+                    <button id="cotiza" class="btn btn-secondary sombra !text-white">
+                    COTIZA
+                    </button>
+                  </div>`,
+        classes: "pb-1",
+        events: {
+          click: contratar,
+        },
+      })
+      .addTo(map);
+
+    var drawnItems = new FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new Control.Draw({
+      edit: {
+        featureGroup: drawnItems,
+      },
+      draw: {
+        polygon: {
+          allowIntersection: true, // No permitir intersecciones
+          showArea: true, // Mostrar área del polígono
+          drawError: {
+            color: "#e1e100", // Color de error
+            message: "<strong>¡Oh no!</strong> no puedes dibujar eso!", // Mensaje de error
+          },
+          shapeOptions: {
+            color: "#787878",
+          },
+        },
+        polyline: false,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        circlemarker: false, // Desactiva la opción de CircleMarker
+      },
+    });
+
+
+    map.addControl(drawControl);
+
+    // Control de localización locateOptions esta en el archivo UtilsLeaflet.astro
+    const locateControl = control.locate(locateOptions);
+    locateControl.addTo(map);
+
+    function onMapClick(e: LeafletMouseEvent) {
+      marker ? map.removeLayer(marker) : (botonCotiza.disabled = false);
+      marker = new Marker(e.latlng, {
+        icon: iconRed,
+      }).addTo(map);
+      console.log("--Latitud, Longitud--");
+      
+      console.log(e.latlng.lat.toFixed(7) + "," + e.latlng.lng.toFixed(7));
+    }
+
+    map.on("click", onMapClick);
+
+    // Desactivar el click listener cuando comienza el dibujo
+    map.on(Draw.Event.DRAWSTART, function () {
+      map.off("click", onMapClick);
+    });
+
+    map.on(Draw.Event.CREATED, function (event: LeafletEvent) {
+      const layer = event.layer;
+      drawnItems.clearLayers();
+      drawnItems.addLayer(layer);
+      updateTextareaWithCoordinates(layer);
+
+      // Volver a activar el click listener
+      map.on("click", onMapClick);
+    });
+
+    map.on(Draw.Event.EDITED, function (event) {
+      const layers = (event as any).layers; // Se castea el tipo para evitar errores de TypeScript
+      layers.eachLayer(function (layer: Layer) {
+        if (layer instanceof Polygon) {
+          // Actualizar solo el polígono editado
+          updateTextareaWithCoordinates(layer);
+        }
+      });
+    });
+
+    const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
+    botonCotiza.disabled = true;
+
+    // Escucha el evento 'locationfound' para obtener lat y lon
+    map.on("locationfound", function (e: LocationEvent) {
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+      console.log("Latitud: " + lat + ", Longitud: " + lon);
+
+      // Elimina el marcador anterior si existe
+      if (marker) {
+        map.removeLayer(marker);
+      } else {
+        botonCotiza?.classList.remove("btn-disabled");
+        console.log("Marker no existe");
+      }
+      // Añade un nuevo marcador en la ubicación encontrada
+      marker = new Marker(e.latlng, {
+        icon: iconRed,
+      }).addTo(map);
+      // Hacer zoom a la ubicación encontrada
+      map.flyTo(e.latlng, 19);
+    });
+
+    map.on("locationerror", function (e: ErrorEvent) {
+      alert(e.message);
+    });
+
+    const URLwhatsapp = document.getElementById(
+      "URLwhatsapp"
+    ) as HTMLInputElement;
+    URLwhatsapp.addEventListener("input", (e) => {
+      URLwhatsapp.value.length >= 28
+        ? (putMarker.disabled = false)
+        : (putMarker.disabled = true);
+    });
+
+    putMarker.onclick = () => {
+      let latitud: number = 0,
+        longitud: number = 0;
+      try {
+        if (URLwhatsapp.value.indexOf("%2C") != -1) {
+          let ambos = URLwhatsapp.value.split("%2C");
+          let izq = ambos[0].split("?q=");
+          let der = ambos[1].split("&z=");
+          latitud = parseFloat(izq[1]);
+          longitud = parseFloat(der[0]);
+        }
+        if (URLwhatsapp.value.indexOf(",") != -1) {
+          let ambos = URLwhatsapp.value.split(",");
+          if (ambos.length == 2) {
+            let izq = ambos[0].split("?q=");
+            if (izq.length == 1) {
+              latitud = parseFloat(ambos[0]);
+            } else {
+              latitud = parseFloat(izq[1]);
+            }
+            longitud = parseFloat(ambos[1]);
+          }
+          if (ambos.length == 3) {
+            let izq = ambos[0].split("/@");
+            latitud = parseFloat(izq[1]);
+            longitud = parseFloat(ambos[1]);
+          }
+        }
+        map.flyTo([latitud, longitud], 16);
+        URLwhatsapp.value = "";
+        if (marker) {
+          map.removeLayer(marker);
+        } else {
+          botonCotiza.disabled = false;
+        }
+        marker = new Marker([latitud, longitud], {
+          icon: iconRed,
+        });
+        marker.addTo(map);
+        putMarker.disabled = true;
+      } catch {
+        alert("Algo salió mal");
+        URLwhatsapp.value = "";
+      }
+    };
+    
+
+
+
+
+
+    // Actualizar el textarea con las coordenadas del polígono
+    function updateTextareaWithCoordinates(layer: Layer) {
+      if (layer instanceof Polygon) {
+        const coordinates = layer.getLatLngs();
+        // Aplanar las coordenadas del polígono
+        const flatCoordinates = (coordinates[0] as LatLng[]).map((latLng) => [
+          Number(latLng.lat.toFixed(6)),
+          Number(latLng.lng.toFixed(6)),
+        ]);
+
+        // Convertir las coordenadas a formato JSON
+        const coordinatesJSON = JSON.stringify(flatCoordinates);
+
+        // Obtener el textarea y establecer su valor
+        const coordinatesInput = document.getElementById(
+          "polygon-coordinates"
+        ) as HTMLTextAreaElement;
+        coordinatesInput.value = coordinatesJSON;
+        createToast(
+          "polygon-coordinates",
+          "map",
+          "Las coordenadas del polígono han sido capturadas.",
+          "top",
+          "success"
+        );
+      } else {
+        createToast(
+          "polygon-coordinates",
+          "map",
+          "El tipo de capa no es un polígono.",
+          "top",
+          "error"
+        );
+      }
+    }
+
+    // Dibujar pligonos
+    const drawCordinates = document.getElementById("submit-coordinates") as HTMLButtonElement;
+    const coordinatesInput = document.getElementById("polygon-coordinates") as HTMLTextAreaElement | null;
+    drawCordinates.addEventListener("click", () => {
+      if (!coordinatesInput) {
+        createToast(
+          "coordenadas",
+          "map",
+          "El área de texto para las coordenadas no se encontró.",
+          "top",
+          "error"
+        );
+        return;
+      }
+      try {
+        const coordinates = JSON.parse(coordinatesInput.value);
+        if (
+          Array.isArray(coordinates) &&
+          coordinates.every(
+            (coord) => Array.isArray(coord) && coord.length === 2
+          )
+        ) {
+          const latLngs = coordinates.map(
+            (coord) => new LatLng(coord[0], coord[1])
+          );
+          const polygon = new Polygon(latLngs, { color: "blue" });
+          drawnItems.addLayer(polygon);
+          map.fitBounds(polygon.getBounds());
+        } else {
+          createToast(
+            "coordenadas",
+            "map",
+            "Formato de coordenadas inválido. Asegúrese de que las coordenadas estén en el formato correcto.",
+            "top",
+            "error"
+          );
+        }
+      } catch (error) {
+        createToast(
+          "coordenadas",
+          "map",
+          "Error al parsear las coordenadas. Asegúrese de que las coordenadas estén en el formato JSON correcto.",
+          "top",
+          "error"
+        );
+      }
+    });
+
+    // Guardar zona en la base de datos
+    const savePolygon = document.getElementById("savePolygon") as HTMLFormElement;
+    savePolygon.addEventListener("submit", (event: SubmitEvent): boolean => {
+      event.preventDefault();
+
+      const form = event.target as HTMLFormElement;
+      const factorInput = document.getElementById("factor") as HTMLInputElement;
+      let factorValue = factorInput.value.replace(",", ".");
+      console.log(factorValue);
+
+      if (isNaN(parseFloat(factorValue))) {
+        createToast(
+          "factor",
+          "map",
+          "Ingrese un valor numérico válido para el factor.",
+          "top",
+          "warning"
+        );
+        return false;
+      }
+
+      // Set the value back to the input in a valid format
+      factorInput.value = factorValue;
+
+      const formData = new FormData(form);
+
+      fetch(form.action, {
+        method: form.method,
+        body: formData,
+      })
+        .then((response) => {
+          if (response.ok) {
+            createToast(
+              "creaArea",
+              "map",
+              "Area agregada exitosamente",
+              "top",
+              "success"
+            );
+            setTimeout(() => {
+              location.reload();
+            }, 3000); // Retraso de 3 segundos
+          } else {
+            createToast(
+              "creaArea",
+              "map",
+              "Hubo un error al agregar el área",
+              "top",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          createToast(
+            "creaArea",
+            "map",
+            "Hubo un error al agregar el área",
+            "top",
+            "error"
+          );
+        });
+
+      return false;
+    });
+
+    // Agrega boton de COTIZA que haga fetch al servidor de mapas y encontrar rutas y tiempos
+
+    let paths: Path[],
+      distancias: number[],
+      tiempos: number[],
+      origenes: string[];
+
+    async function contratar() {
+      let factor: number;
+      let precios: Precios;
+
+      let precioDistancia: number;
+      let precioTiempo: number;
+      let precioBase: number;
+      let precioFinal: number;
+      let precioFinalFactor: number;
+      let precioFinalRedondeado: number;
+
+      overlay.classList.remove("invisible");
+
+      let factores = await getPoligons().then((poligonos): number[] => {
+        let f: number[] = [];
+        if (poligonos) {
+          poligonos.forEach((p) => {
+            if (inscrito(marker, p.polygon)) {
+              f.push(p.factor);
+            }
+          });
+        }
+        return f;
+      });
+
+      if (factores.length === 0) {
+        overlay.classList.add("invisible");
+        alert("No se encontraron factores");
+        // TODO Mostrar modal con mensaje de error
+        return null;
+      } else {
+        factor = factores.reduce((acumulador, valorActual) => acumulador * valorActual, 1);
+      }
+
+      ({ paths, distancias, tiempos, origenes } = await findRoutes(marker, 1));
+
+      paths.forEach((p) => p.addTo(map));
+
+      // Encontrar la distancia mínima
+      const minIndex = distancias.reduce((minIdx, curr, idx, array) => {
+        return curr < array[minIdx] ? idx : minIdx;
+      }, 0);
+
+      // Obtiene los precios por km y minuto de la base de datos
+      precios = await getPrices();
+
+      // Calcular el precio
+      precioDistancia = distancias[minIndex] * precios.p_km;
+      precioTiempo = tiempos[minIndex] * precios.p_tiempo;
+      precioBase = precios.p_base;
+      precioFinal = precioBase +(precioDistancia < precioTiempo ? precioTiempo : precioDistancia);
+      precioFinalFactor = precioFinal * factor;
+      precioFinalRedondeado = Math.round(precioFinalFactor / 10) * 10;
+
+      //TODO Guardar en la base de datos cada cliente si no esta logueado
+
+      // Mostrar el modal con los precios
+      const modalPrecio = document.getElementById("modalPrecio") as HTMLInputElement;
+      const modalHeader = document.getElementById("modal-header") as HTMLDivElement;
+
+      // Mover el modal
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      modalHeader.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        offsetX = e.clientX - modalPrecio.getBoundingClientRect().left;
+        offsetY = e.clientY - modalPrecio.getBoundingClientRect().top;
+        modalPrecio.style.position = "absolute";
+        modalPrecio.style.zIndex = "1000";
+      });
+      
+      document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+          modalPrecio.style.left = `${e.clientX - offsetX}px`;
+          modalPrecio.style.top = `${e.clientY - offsetY}px`;
+          }
+        });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+        });
+
+
+
+      const xModal = document.getElementById("xModal") as HTMLInputElement;
+      const tbValores = document.getElementById("tbValores") as HTMLTableElement;
+      const tbPrecios = document.getElementById("tbPrecios") as HTMLTableElement;
+      const tbMenor = document.getElementById("tbMenor") as HTMLTableElement;
+      const tbFinal = document.getElementById("tbFinal") as HTMLTableElement;
+      const formCost = document.getElementById("formCost") as HTMLInputElement;
+      const formName = document.getElementById("formName") as HTMLInputElement;
+      const formPhone = document.getElementById("formPhone") as HTMLInputElement;
+
+      const p_base = document.getElementById("p_base") as HTMLSpanElement;
+      const p_km = document.getElementById("p_km") as HTMLSpanElement;
+      const p_tiempo = document.getElementById("p_tiempo") as HTMLSpanElement;
+
+      tbVal(tbValores, origenes, distancias, tiempos);
+
+      const preciosDistancia = distancias.map((value) =>
+        Math.round(value * precios.p_km + precioBase)
+      );
+      const preciosTiempo = tiempos.map((value) =>
+        Math.round(value * precios.p_tiempo + precioBase)
+      );
+      tbVal(tbPrecios, origenes, preciosDistancia, preciosTiempo);
+
+      let row = document.createElement("tr");
+      let row_origen = document.createElement("td");
+      let row_menor = document.createElement("td");
+      let row_factor = document.createElement("td");
+      row_origen.innerHTML = origenes[minIndex];
+      // Escogemos el mayor entre tiempo y distancia
+      row_menor.innerHTML = Math.round(precioFinal).toString();
+      row_factor.innerHTML = factor.toString();
+      factor != 1 ? (row_factor.style.color = "red") : null;
+      row.appendChild(row_origen);
+      row.appendChild(row_menor);
+      row.appendChild(row_factor);
+      tbMenor.appendChild(row);
+
+      let rowf = document.createElement("tr");
+      let rowf_ajuste = document.createElement("td");
+      let rowf_precio = document.createElement("td");
+      let rowf_facturado = document.createElement("td");
+      rowf_ajuste.innerHTML = Math.round(precioFinalFactor).toString();
+      rowf_precio.innerHTML = precioFinalRedondeado.toString();
+      rowf_precio.classList.add("text-lg", "font-medium");
+      rowf_facturado.innerHTML = (Math.round((precioFinalFactor * 1.2) / 10) * 10).toString();
+      rowf.appendChild(rowf_ajuste);
+      rowf.appendChild(rowf_precio);
+      rowf.appendChild(rowf_facturado);
+      tbFinal.appendChild(rowf);
+
+      modalPrecio.classList.toggle("invisible");
+      overlay.classList.add("invisible");
+      map.off("click", onMapClick);
+
+      function resetModal() {
+        limpiarModal();
+        limpiarPaths();
+        modalPrecio.classList.toggle("invisible");
+        map.on("click", onMapClick);
+      }
+
+      xModal.onclick = () => {
+        resetModal();
+      };
+
+      function limpiarModal() {
+        while (tbValores.firstChild) {
+          tbValores.removeChild(tbValores.firstChild);
+        }
+        while (tbPrecios.firstChild) {
+          tbPrecios.removeChild(tbPrecios.firstChild);
+        }
+        while (tbMenor.firstChild) {
+          tbMenor.removeChild(tbMenor.firstChild);
+        }
+        while (tbFinal.firstChild) {
+          tbFinal.removeChild(tbFinal.firstChild);
+        }
+        formName.value = "";
+        formPhone.value = "";
+        formCost.value = "";
+      }
+    
+      p_base.textContent =  precios.p_base.toString();
+      p_km.textContent = precios.p_km.toString();
+      p_tiempo.textContent = precios.p_tiempo.toString();
+      formCost.value = precioFinalRedondeado.toString();
+
+
+    // GUARDAR LA INFORMACION EN LA BASE DE DATOS
+    const saveData = document.getElementById("saveData") as HTMLButtonElement;
+    saveData.onclick = async () => {
+        // Validación del campo de teléfono
+      if (formPhone.value.length < 8) {
+        createToast('validación', 'map', 'El teléfono debe tener al menos 8 dígitos.', 'top', 'error');
+        return;
+      }
+
+      // Validación del campo de precio
+      const precioFinalRedondeado = parseInt(formCost.value, 10);
+      if (isNaN(precioFinalRedondeado) || precioFinalRedondeado < 100) {
+        createToast('validación', 'map', 'El precio no debe quedar en blanco.', 'top', 'error');
+        return;
+      }
+
+        // Asegúrate de que postData es una función asíncrona que retorna una promesa
+      await postData(formName.value, formPhone.value, precioFinalRedondeado, marker).then((r) => {
+        createToast('postData', 'map', 'Datos guardados con éxito', 'top', 'success');
+      }).catch((error) => {
+        createToast('postData', 'map', `${error}`	, 'top', 'error');
+      });  
+      resetModal();  
+    };
+      
+
+    }
+
+    function limpiarPaths() {
+      paths.forEach((p) => {
+        p.remove();
+      });
+    }
+
+    function tbVal(tbody: HTMLTableElement, origen: string[], distancia: number[], tiempo: number[]) {
+      origen.forEach((o, i) => {
+        const row = document.createElement("tr");
+        const row_origen = document.createElement("td");
+        const row_dist = document.createElement("td");
+        const row_tiempo = document.createElement("td");
+
+        row_origen.textContent = o;
+        row_origen.style.color = colorPath[i];
+        row_dist.textContent = distancia[i].toString();
+        row_tiempo.textContent = tiempo[i].toString();
+
+        row.appendChild(row_origen);
+        row.appendChild(row_dist);
+        row.appendChild(row_tiempo);
+
+        tbody.appendChild(row);
+      });
+    }
+
+    
+  </script>
+</MainLayout>

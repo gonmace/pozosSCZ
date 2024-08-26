@@ -1,0 +1,297 @@
+---
+import Header from "../components/Header.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+import "leaflet/dist/leaflet.css";
+import "../components/Map/leaflet.Control.Center.css";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+---
+
+<MainLayout
+  title="Pozos sépticos - Santa Cruz"
+  description="Servicio de Limpieza de pozos sépticos en el depatramento de Santa Cruz">
+  <main class="w-full">
+    <Header class_nav="max-w-7xl w-4/5 text-black fixed left-1/2 transform -translate-x-1/2 z-[10000] rounded-2xl bg-gray-400 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border border-gray-100"/>
+    <div id="map" class="h-screen">
+      <div
+        id="overlay"
+        class="invisible z-[10000] absolute inset-0 bg-opacity-50 bg-black flex items-center justify-center"
+      >
+        <span class="loading loading-spinner text-secondary"></span>
+      </div>
+    </div>
+
+    <!-- You can open the modal using ID.showModal() method -->
+    <dialog id="precios" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button id="modalPrecioClose" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            >✕</button>
+        
+          <h3 class="font-bold text-lg">Cotización</h3>
+          <hr />
+          <p class="py-4 text-center"></p>
+          <div class="flex justify-end">
+            <button id="confirmar" class="btn btn-accent text-white"
+              >Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <script>
+      // Convertir el precio en una cadena JSON y luego pasarlo al script
+      import { Map, tileLayer, Marker, control, polyline } from "leaflet"; 
+      import "../components/Map/leaflet.Control.Center";
+      import type {
+        LeafletMouseEvent,
+        LocationEvent,
+        ErrorEvent,
+        LatLngExpression,
+        Path,
+      } from "leaflet";
+      import {
+        iconRed,
+        locateOptions,
+      } from "../components/Map/ObjectLeaflet.astro";
+      import "leaflet-control-custom";
+      import { inscrito } from "../components/utils/inscrito";
+      import { mensajeWapp } from "../components/utils/utils";
+      import type { Precios } from "../types/types";
+      import {
+        findRoutes,
+        getPoligons,
+        getPrices,
+      } from "../components/utils/findPrices";
+      import { bases } from "../components/utils/fetchOSRM";
+      import { postData } from "../components/utils/postCliente";
+
+
+      let marker: Marker;
+      const overlay = document.getElementById("overlay") as HTMLDivElement;
+      const modalPrecio = document.getElementById("precios") as HTMLDialogElement;
+      const modalPrecioClose = document.getElementById("modalPrecioClose") as HTMLButtonElement;
+      const parrafo = modalPrecio.querySelector("p") as HTMLParagraphElement;
+      const botonConfirmar = document.getElementById("confirmar") as HTMLButtonElement;
+
+      const map = new Map("map", {
+        tap: false,
+        center: [-17.784071, -63.180522],
+        zoom: 12,
+        zoomControl: true,
+      });
+
+      const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      const esri = tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          maxZoom: 19,
+          attribution:
+            "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+        }
+      );
+
+      // Crear un objeto que contiene las capas base
+      const baseMaps = {
+        OpenStreetMap: osm,
+        "Esri World Imagery": esri,
+      };
+
+      map.getContainer().style.cursor = "crosshair";
+
+      // Agregar el control de capas al mapa
+      control
+        .layers(baseMaps, {}, { position: "topleft", collapsed: false })
+        .addTo(map);
+
+      control
+        .custom({
+          position: "bottomcenter",
+          content: `<div>
+                    <button id="cotiza" class="btn btn-secondary btn-disabled sombra text-white">
+                    COTIZA
+                    </button>
+                  </div>`,
+          classes: "pb-1",
+          events: {
+            click: contratar,
+          },
+        })
+        .addTo(map);
+
+      const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
+
+      function onMapClick(e: LeafletMouseEvent) {
+        // Obtener el elemento nav
+        const navElement = document.querySelector("nav");
+        // Verificar si el clic ocurrió fuera del nav
+        if (
+          navElement &&
+          !navElement.contains(e.originalEvent.target as Node)
+        ) {
+          if (marker) {
+            map.removeLayer(marker);
+          } else {
+            botonCotiza.classList.remove("btn-disabled");
+          }
+          marker = new Marker(e.latlng, {
+            icon: iconRed,
+          }).addTo(map);
+          console.log("Lat: " + e.latlng.lat.toFixed(6) + ", Lon: " + e.latlng.lng.toFixed(6));
+        }
+      }
+      map.on("click", onMapClick);
+
+      // Control de localización locateOptions esta en el archivo UtilsLeaflet.astro
+      const locateControl = control.locate(locateOptions);
+      locateControl.addTo(map);
+
+      // Escucha el evento 'locationfound' para obtener lat y lon
+      map.on("locationfound", function (e: LocationEvent) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+        console.log("Lat: " + lat + ", Lon: " + lon);
+
+        // Elimina el marcador anterior si existe
+        if (marker) {
+          map.removeLayer(marker);
+        } else {
+          botonCotiza.classList.remove("btn-disabled");
+        }
+        // Añade un nuevo marcador en la ubicación encontrada
+        marker = new Marker(e.latlng, {
+          icon: iconRed,
+        }).addTo(map);
+
+        // Hacer zoom a la ubicación encontrada
+        map.flyTo(e.latlng, 19);
+        
+      });
+
+      map.on("locationerror", function (e: ErrorEvent) {
+        alert(e.message);
+      });
+
+      // Agrega boton de COTIZA que haga fetch al servidor de mapas y encontrar rutas y tiempos
+      let paths: Path[], 
+          distancias: number[], 
+          tiempos: number[], 
+          origenes: string[];
+
+      async function contratar() {
+
+        let factor: number;
+        let precios: Precios;
+
+        let precioDistancia: number;
+        let precioTiempo: number;
+        let precioBase: number;
+        let precioFinal: number;
+        let precioFinalFactor: number;
+        let precioFinalRedondeado: number;
+
+        overlay.classList.remove("invisible");
+
+        let factores = await getPoligons().then((poligonos): number[] => {
+          let f: number[] = [];
+          if (poligonos) {
+            poligonos.forEach((p) => {
+              if (inscrito(marker, p.polygon)) {
+                f.push(p.factor);
+              }
+            });
+          }
+          return f;
+        });
+
+        
+        if (factores.length === 0) {
+          overlay.classList.add("invisible");
+          alert("No se encontraron factores"); 
+          // TODO Mostrar modal con mensaje de error
+          return null;
+        } else {
+          factor = factores.reduce((acumulador, valorActual) => acumulador * valorActual, 1);  
+        };
+
+        console.log("Factor: " + factor);
+        
+        ({ paths, distancias, tiempos, origenes } = await findRoutes(marker, 0.15)); 
+        console.log("origenes:", origenes)
+        console.log("tiempos:", tiempos)
+        console.log("distancias:", distancias)
+
+        paths.forEach((p) => p.addTo(map));
+
+        // Encontrar la fila con la distancia mínima
+        const minIndex = distancias.reduce((minIdx, curr, idx, array) => {
+          return curr < array[minIdx] ? idx : minIdx;}, 0);
+        console.log("Distancia Menor:", origenes[minIndex]);
+
+        // Obtiene los precios por km y minuto de la base de datos
+        precios = await getPrices();
+        
+        // Calcular el precio
+        precioDistancia = distancias[minIndex] * precios.p_km;
+        console.log("precioDistancia:", precioDistancia)
+        precioTiempo = tiempos[minIndex] * precios.p_tiempo;
+        console.log("precioTiempo:", precioTiempo)
+        precioBase = precios.p_base;
+        console.log("precioBase:", precioBase)
+        precioFinal = precioBase + (precioDistancia < precioTiempo ? precioTiempo : precioDistancia);
+        console.log("precioFinal:", precioFinal)
+        precioFinalFactor = precioFinal * factor;
+        console.log("precioFinalFactor:", precioFinalFactor)
+        precioFinalRedondeado = Math.round(precioFinalFactor / 10) * 10;
+        console.log("precioFinalRedondeado:", precioFinalRedondeado)
+        
+        // Mostrar el modal
+        parrafo.innerHTML = `Costo base para vivienda <br> Bs. ${precioFinalRedondeado}`;
+        modalPrecio.showModal();
+
+        async function handleClose() {
+          overlay.classList.add("invisible");
+          await postData("Cliente", "", precioFinalRedondeado, marker, "COT", "CLX").then(() => {
+            console.log("Cancelado - Cliente guardado");
+          });
+        };
+
+        async function handleConfirmar() {
+          overlay.classList.add("invisible");
+          let codigo = precioFinalRedondeado.toString(10).split("");
+          codigo.unshift(Math.floor(Math.random() * 10).toString());
+          codigo.splice(2, 0, Math.floor(Math.random() * 10).toString());
+          codigo.splice(4, 0, Math.floor(Math.random() * 10).toString());
+          codigo.splice(6, 0, Math.floor(Math.random() * 10).toString());
+          let codigofinal =
+            codigo[0] +
+            codigo[1] +
+            codigo[2] +
+            codigo[3] +
+            codigo[4] +
+            codigo[5] +
+            codigo[6];
+          let celular = "+59167728817";
+          await postData("Cliente", "", precioFinalRedondeado, marker, "COT", "CLC",codigofinal).then(() => {
+            console.log("Confirmado - Cliente guardado");
+          });
+          let menLatLon = `Código de cotización:${codigofinal}%0D%0A
+          ¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación:%0D%0A
+          https://maps.google.com/maps?q=${marker.getLatLng().lat.toFixed(7)}%2C${marker.getLatLng().lng.toFixed(7)}&z=17&hl=es`;
+          mensajeWapp(menLatLon, celular);
+        };
+
+        // Agregar listeners asegurándote de que no se acumulan
+        // modalPrecioClose.onclick = handleClose;
+        modalPrecioClose.onclick = handleClose;
+        botonConfirmar.onclick = handleConfirmar;
+  
+      }
+      
+    </script>
+  </main>
+</MainLayout>

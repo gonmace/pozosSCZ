@@ -1,16 +1,72 @@
 ---
+import CardAlcance from "../components/index/CardAlcance.astro";
+import CardAQuienes from "../components/index/CardAQuienes.astro";
+import Banner from "../components/index/Banner.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+export const prerender = false;
 
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<MainLayout
+  title="Pozos sépticos - Santa Cruz"
+  description="Servicio de Limpieza de pozos sépticos en el depatramento de Santa Cruz"
+  bodyClass="bg-gradient-to-b from-primary via-white to-primary"
+>
+<main class="max-w-7xl mx-auto">
+  <Header class_nav= "max-w-7xl w-full fixed z-50 rounded-2xl text-white left-1/2 transform -translate-x-1/2"/>
+  <Banner />
+  <section class="mt-10">
+    <div class="text-center py-10 ">
+        <p class="text-lg lg:text-xl mb-3 ">
+            ¿aún no nos conoces?
+        </p>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 mb-4">Limpieza de pozos sépticos Santa Cruz</h2>
+        <p class="text-lg lg:text-xl leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto text-gray-600">(Somoj)s
+            querendones de nuestra tierra... La queremos verde y con el “suelo” más puro de América.
+        </p>
+    </div>
+    <div class="flex flex-wrap gap-1 md:flex-row">
+      <CardAlcance 
+      icon="alcance/leaf" 
+      title="Alcance" 
+      description="Limpieza de pozos sépticos en Santa Cruz" 
+      />
+      <CardAlcance 
+      icon="alcance/servicios" 
+      title="Alcance" 
+      description="Limpieza de pozos sépticos en Santa Cruz" 
+      />
+      <CardAlcance 
+      icon="alcance/ubicacion" 
+      title="Alcance" 
+      description="Limpieza de pozos sépticos en Santa Cruz" 
+      />
+      <CardAlcance 
+      icon="alcance/camion" 
+      title="Alcance" 
+      description="Limpieza de pozos sépticos en Santa Cruz" 
+      />
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <p class="text-center text-base sm:text-lg lg:text-xl mb-3 text-black">
+        ¿A quienes atendemos?
+    </p>
+    <div class="flex flex-wrap-reverse">
+      <CardAQuienes icon="aquienes/casa" title="Viviendas" />
+      <CardAQuienes icon="aquienes/colegios" title="Colegios" />
+      <CardAQuienes icon="aquienes/empresas" title="Empresas" />
+      <CardAQuienes icon="aquienes/hoteles" title="Hoteles" />
+      <CardAQuienes icon="aquienes/industrias" title="Industrias" />
+      <CardAQuienes icon="aquienes/mercados" title="Mercados" />
+      <CardAQuienes icon="aquienes/restaurantes" title="Restaurantes" />
+    </div>
+  </section>
+
+  <Footer />
+</main>
+  
+</MainLayout>

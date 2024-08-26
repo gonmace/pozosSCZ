@@ -1,0 +1,43 @@
+---
+import "@fontsource-variable/nunito";
+
+interface Props {
+  title: string;
+  description: string;
+  bodyClass?: string;
+}
+
+const { title, description, bodyClass } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" data-theme="pozosscz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class=`${bodyClass} h-fit`>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  .centrear-w-absolute {
+    @apply left-1/2 transform -translate-x-1/2;
+  }
+  .centrearXY {
+    @apply top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  }
+  
+  body {
+    font-family: "Nunito Variable", sans-serif;
+  }
+  .sombra {
+    -webkit-filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.7));
+  }
+
+</style>

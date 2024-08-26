@@ -1,0 +1,29 @@
+---
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const { icon , title , description } = Astro.props;
+---
+
+<div class="mx-auto flex flex-col text-center w-full md:w-3/12">
+    <div class="sombra w-20 h-20 p-4 mx-auto inline-flex text-white items-center justify-center rounded-full bg-accent mb-5 flex-shrink-0">
+        <Icon name={icon} size={50} />
+    </div>
+    <div>
+        <h2 class="text-xl lg:text-2xl mb-3">
+            {title}
+        </h2>
+        <h3 class="text-gray-800 leading-relaxed text-lg sm:text-lg lg:text-xl ">
+            {description}
+        </h3>
+    </div>
+        <div class="mx-auto w-16 h-1 rounded-full bg-primary mt-4 mb-7"></div>
+    
+</div>
+
+
