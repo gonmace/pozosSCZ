@@ -4,6 +4,8 @@ import MainLayout from "../layouts/MainLayout.astro";
 import Header from "../components/Header.astro";
 import { postMessage } from "../components/utils/postMessage";
 
+export const prerender = false;
+
 if (Astro.request.method === "POST") {
   try {
     const data = await Astro.request.formData();

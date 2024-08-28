@@ -4,6 +4,7 @@ import MainLayout from "../layouts/MainLayout.astro";
 import "leaflet/dist/leaflet.css";
 import "../components/Map/leaflet.Control.Center.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+export const prerender = true;
 ---
 
 <MainLayout
@@ -40,13 +41,12 @@ import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
     <script>
       // Convertir el precio en una cadena JSON y luego pasarlo al script
-      import { Map, tileLayer, Marker, control, polyline } from "leaflet"; 
+      import { Map, tileLayer, Marker, control } from "leaflet"; 
       import "../components/Map/leaflet.Control.Center";
       import type {
         LeafletMouseEvent,
         LocationEvent,
         ErrorEvent,
-        LatLngExpression,
         Path,
       } from "leaflet";
       import {
@@ -62,7 +62,6 @@ import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
         getPoligons,
         getPrices,
       } from "../components/utils/findPrices";
-      import { bases } from "../components/utils/fetchOSRM";
       import { postData } from "../components/utils/postCliente";
 
 

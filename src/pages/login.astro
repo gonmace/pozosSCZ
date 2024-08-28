@@ -1,7 +1,7 @@
 ---
 import Footer from "../components/Footer.astro";
 import MainLayout from "../layouts/MainLayout.astro";
-export const prerender = false;
+
 ---
 
 <MainLayout
@@ -87,7 +87,7 @@ export const prerender = false;
             }
 
             // Redirigir a la página protegida
-            window.location.href = '/';
+            window.location.href = '/mapa';
         } catch (error) {
             const formError = document.getElementById('form-error') as HTMLParagraphElement;
             formError.textContent = `${error}`;

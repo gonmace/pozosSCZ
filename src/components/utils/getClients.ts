@@ -3,7 +3,6 @@ import {
   layerGroup,
   circleMarker,
   latLng,
-  markerClusterGroup,
 } from "leaflet";
 import type { Marker, CircleMarker } from "leaflet";
 import type { Clientes } from "../../types/types";
@@ -69,7 +68,7 @@ export async function fetchClients() {
   let tel1: string;
   let marca: Marker | CircleMarker;
 
-  clientes.forEach((e, i) => {
+  clientes.forEach((e) => {
 
     // Calcular color base dividiendo el costo por 100
     color = e.cost / 100;

@@ -5,7 +5,7 @@
  * @returns Una promesa que se resuelve en un array de resultados de ruta de OSRM.
  */
 import type OSRM from "osrm";
-import type { Marker, Path } from "leaflet";
+import type { Marker } from "leaflet";
 
 type Waypoint = [number, number];
 type Base = [Waypoint[0], Waypoint[1], string];
