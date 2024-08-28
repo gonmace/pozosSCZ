@@ -5,8 +5,6 @@ import Banner from "../components/index/Banner.astro";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import MainLayout from "../layouts/MainLayout.astro";
-export const prerender = false;
-
 ---
 
 <MainLayout
@@ -22,7 +20,7 @@ export const prerender = false;
         <p class="text-lg lg:text-xl mb-3 ">
             ¿aún no nos conoces?
         </p>
-        <h2 class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 mb-4">Limpieza de pozos sépticos Santa Cruz</h2>
+        <h1 id="titulo" class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 mb-4">Limpieza de pozos sépticos Santa Cruz</h1>
         <p class="text-lg lg:text-xl leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto text-gray-600">(Somoj)s
             querendones de nuestra tierra... La queremos verde y con el “suelo” más puro de América.
         </p>
@@ -67,6 +65,30 @@ export const prerender = false;
   </section>
 
   <Footer />
-</main>
   
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    const titulo = document.getElementById("titulo") as HTMLElement;
+    if (message) {
+      const originalText = titulo.innerText;
+      titulo.innerText = decodeURIComponent(message);
+      titulo.classList.add("text-secondary");
+      
+      setTimeout(() => {
+        // Eliminar el parámetro de la URL
+        titulo.innerText = originalText;
+        titulo.classList.remove("text-secondary");
+
+        urlParams.delete('message');
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, document.title, newUrl);
+      }, 10000);
+
+
+    }
+  </script>
+</main>
+
+
 </MainLayout>

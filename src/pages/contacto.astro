@@ -1,0 +1,74 @@
+---
+import Footer from "../components/Footer.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+import Header from "../components/Header.astro";
+import { postMessage } from "../components/utils/postMessage";
+
+if (Astro.request.method === "POST") {
+  try {
+    const data = await Astro.request.formData();
+    const name = data.get("name")?? "";
+    const tel = data.get("tel")?? "";
+    const message = data.get("message")?? "";
+
+    let consulta = await postMessage(name.toString(), tel.toString(), message.toString())
+    
+    // Codificar el mensaje y agregarlo como parámetro a la URL
+    const encodedMessage = encodeURIComponent(consulta.message);
+    return Astro.redirect(`/?message=${encodedMessage}`);
+    
+
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
+  }
+}
+
+---
+<MainLayout
+  title="Contacto"
+  description="Inicie sesión para acceder a las características exclusivas."
+  bodyClass="bg-gradient-to-b from-primary via-white to-primary"
+>
+<main class="h-screen sm:flex sm:flex-col">
+  <Header class_nav= "max-w-7xl w-full fixed z-50 rounded-2xl text-white left-1/2 transform -translate-x-1/2"/>
+    <div class="mx-auto w-full max-w-md z-10">
+      <form class="text-center pt-20" method="POST">
+        <div class="mb-2">
+            <input 
+              type="text"
+              name="name"
+              placeholder="Nombre" 
+              class="input input-bordered w-full max-w-xs"
+              required minlength="3" />
+
+        </div>
+        <div class="mb-2">
+
+            <input
+              type="tel"
+              name="tel"
+              placeholder="Teléfono"
+              class="input input-bordered w-full max-w-xs"
+              required minlength="8"/>            
+        </div>
+        <div class="mb-3">
+            <textarea 
+            rows="4"
+            name="message"
+            placeholder="Mensaje"
+            class="textarea textarea-bordered w-full max-w-xs"
+            required minlength="20"></textarea>  
+
+        </div>
+        <div>
+          <button class="btn btn-block max-w-xs bg-accent text-white">ENVIAR</button>
+        </div>
+      </form>
+    </div>
+    <div class="absolute bottom-0 w-full">
+      <Footer />
+    </div>
+  </main>
+</MainLayout>

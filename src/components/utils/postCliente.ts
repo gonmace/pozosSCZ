@@ -25,7 +25,9 @@ export async function postData(
     method: "POST",
     body: JSON.stringify(data),
     headers: {
+      "Accept": "application/json, text/plain, */*",
       "Content-Type": "application/json",
+      "User-Agent": "BE pzosSCZ",
     },
   })
     .then((res) => {

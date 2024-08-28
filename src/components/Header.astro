@@ -61,7 +61,7 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
         ))}
           <li>
             {isAuthenticated ? 
-            <a href="#" class="flex justify-between">LogOut <Icon name="logout"/></a> :
+            <a href="#" id="logout-link" class="logout-link flex justify-between">LogOut <Icon name="logout"/></a> :
             <a href="/login" class="flex justify-between">LogIn <Icon name="login"/></a>
             }
           </li>
@@ -70,7 +70,7 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
     
 
     {isAuthenticated ? 
-        <a href="#" class="hidden md:flex flex-row w-20 justify-around">LogOut <Icon name="logout" size={20} /></a>:
+        <a href="#" id="logout-link-desktop" class="hidden md:flex flex-row w-20 justify-around">LogOut <Icon name="logout" size={20} /></a>:
         <a href="/login" class="hidden md:flex flex-row w-20 justify-around">LogIn <Icon name="login" size={20} /></a>
       }
   </div>
@@ -87,6 +87,35 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
 </style>
 
 <script>
+
+async function logout() {
+  const response = await fetch('/api/cookie', { method: 'DELETE' });
+  
+  if (response.ok) {
+    const data = await response.json();
+    console.log(data.message);
+    // Redirigir o realizar cualquier otra acción después de borrar la cookie
+    const encodedMessage = encodeURIComponent(data.message);
+    window.location.href = `/?message=${encodedMessage}`;
+  } else {
+    console.error("Error al intentar borrar la cookie");
+  }
+}
+         
+  
+    document.addEventListener("DOMContentLoaded", function() {
+    const logoutLink = document.getElementById("logout-link");
+    const logoutLinkDesktop = document.getElementById("logout-link-desktop");
+
+    if (logoutLink) {
+      logoutLink.addEventListener("click", logout);
+    }
+
+    if (logoutLinkDesktop) {
+      logoutLinkDesktop.addEventListener("click", logout);
+    }
+  });
+
   const handleScroll = () => {
     const navbar = document.getElementById("navbar") as HTMLElement;
     if (window.scrollY > window.innerHeight/3) {

@@ -1,5 +1,4 @@
 ---
-// Importando componentes y layouts necesarios
 import Footer from "../components/Footer.astro";
 import MainLayout from "../layouts/MainLayout.astro";
 export const prerender = false;
@@ -37,7 +36,7 @@ export const prerender = false;
 
             </div>
             <div>
-              <button type="submit" class="w-full flex justify-center bg-primary hover:bg-accent text-gray-100 p-3 rounded-full tracking-wide font-semibold shadow-lg cursor-pointer transition ease-in duration-500">Sign in</button>
+              <button type="submit" class="w-full flex justify-center bg-primary hover:bg-accent text-base-100 p-3 rounded-full tracking-wide font-semibold shadow-lg cursor-pointer transition ease-in duration-500">Sign in</button>
               <p id="form-error" class="text-red-500 mt-2"></p>
             </div>
           </div>
@@ -74,7 +73,7 @@ export const prerender = false;
             const data = await djangoResponse.json();
 
             // Enviar el token al endpoint de Astro para guardarlo como cookie
-            const astroResponse = await fetch('/api/set-token', {
+            const astroResponse = await fetch('/api/cookie', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
