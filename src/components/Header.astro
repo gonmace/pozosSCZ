@@ -6,7 +6,7 @@ interface Props {
   class_nav?: string;
 }
 const { class_nav = "bg-transparent" } = Astro.props;
-const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
+
 ---
 
 <nav id="navbar" class=`navbar ${class_nav}`>
@@ -24,13 +24,12 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
   <div class="navbar-center hidden md:flex">
     <ul class="menu menu-horizontal px-1 uppercase ">
       {menuData.map((item: MenuItem) => (
-        isAuthenticated || !item.protected ? 
+
         <li>
           <a href={item.link}>{item.name} </a>
         </li>
-        : null
-      ))}
 
+      ))}
     </ul>
   </div>
 
@@ -53,26 +52,17 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
         tabindex="0"
         class="menu menu-lg text-black dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-48 p-2 shadow mr-6 left-1/2 transform -translate-x-1/2">
         {menuData.map((item) => (
-          isAuthenticated || !item.protected ? 
+          
           <li>
             <a href={item.link} class="flex justify-between">{item.name} <Icon name={item.icon} /></a>
           </li>
-          : null
+
         ))}
-          <li>
-            {isAuthenticated ? 
-            <a href="#" id="logout-link" class="logout-link flex justify-between">LogOut <Icon name="logout"/></a> :
-            <a href="/login" class="flex justify-between">LogIn <Icon name="login"/></a>
-            }
-          </li>
+
       </ul>
     </div>
     
 
-    {isAuthenticated ? 
-        <a href="#" id="logout-link-desktop" class="hidden md:flex flex-row w-20 justify-around">LogOut <Icon name="logout" size={20} /></a>:
-        <a href="/login" class="hidden md:flex flex-row w-20 justify-around">LogIn <Icon name="login" size={20} /></a>
-      }
   </div>
 </nav>
 
@@ -87,34 +77,6 @@ const isAuthenticated  = (Astro.cookies.get("authToken") || {})?.value;
 </style>
 
 <script>
-
-async function logout() {
-  const response = await fetch('/api/cookie', { method: 'DELETE' });
-  
-  if (response.ok) {
-    const data = await response.json();
-    console.log(data.message);
-    // Redirigir o realizar cualquier otra acción después de borrar la cookie
-    const encodedMessage = encodeURIComponent(data.message);
-    window.location.href = `/?message=${encodedMessage}`;
-  } else {
-    console.error("Error al intentar borrar la cookie");
-  }
-}
-         
-  
-    document.addEventListener("DOMContentLoaded", function() {
-    const logoutLink = document.getElementById("logout-link");
-    const logoutLinkDesktop = document.getElementById("logout-link-desktop");
-
-    if (logoutLink) {
-      logoutLink.addEventListener("click", logout);
-    }
-
-    if (logoutLinkDesktop) {
-      logoutLinkDesktop.addEventListener("click", logout);
-    }
-  });
 
   const handleScroll = () => {
     const navbar = document.getElementById("navbar") as HTMLElement;

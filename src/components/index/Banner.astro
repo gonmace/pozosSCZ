@@ -168,16 +168,10 @@
         scale: escalaLogo,
         begin: function () {
           // Crea un contorno de camion
-          const contorno = document.getElementById("contorno") as SVGPathElement | null;
-          const tanqueCabina = document.getElementById(
-            "tanqueCabina"
-          ) as SVGPathElement | null;
-          const llantas = document.getElementById(
-            "llantas"
-          ) as SVGPathElement | null;
-          const tanqueGas = document.getElementById(
-            "tanqueGas"
-          ) as SVGPathElement | null;
+          const contorno = document.getElementById("contorno");
+          const tanqueCabina = document.getElementById("tanqueCabina");
+          const llantas = document.getElementById("llantas");
+          const tanqueGas = document.getElementById("tanqueGas");
           if (contorno && tanqueCabina && llantas && tanqueGas) {
             KUTE.to(
               contorno,

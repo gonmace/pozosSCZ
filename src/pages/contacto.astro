@@ -2,30 +2,30 @@
 import Footer from "../components/Footer.astro";
 import MainLayout from "../layouts/MainLayout.astro";
 import Header from "../components/Header.astro";
-import { postMessage } from "../components/utils/postMessage";
+// import { postMessage } from "../components/utils/postMessage";
 
-export const prerender = false;
+// export const prerender = false;
 
-if (Astro.request.method === "POST") {
-  try {
-    const data = await Astro.request.formData();
-    const name = data.get("name")?? "";
-    const tel = data.get("tel")?? "";
-    const message = data.get("message")?? "";
+// if (Astro.request.method === "POST") {
+//   try {
+//     const data = await Astro.request.formData();
+//     const name = data.get("name")?? "";
+//     const tel = data.get("tel")?? "";
+//     const message = data.get("message")?? "";
 
-    let consulta = await postMessage(name.toString(), tel.toString(), message.toString())
+//     let consulta = await postMessage(name.toString(), tel.toString(), message.toString())
     
-    // Codificar el mensaje y agregarlo como parámetro a la URL
-    const encodedMessage = encodeURIComponent(consulta.message);
-    return Astro.redirect(`/?message=${encodedMessage}`);
+//     // Codificar el mensaje y agregarlo como parámetro a la URL
+//     const encodedMessage = encodeURIComponent(consulta.message);
+//     return Astro.redirect(`/?message=${encodedMessage}`);
     
 
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(error.message);
-    }
-  }
-}
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       console.error(error.message);
+//     }
+//   }
+// }
 
 ---
 <MainLayout
