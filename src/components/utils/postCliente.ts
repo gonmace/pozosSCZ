@@ -1,6 +1,7 @@
 import { Marker } from "leaflet";
+const API_DOMAIN = import.meta.env.API_DOMAIN;
 
-const urlPost = "http://127.0.0.1:8000/api/v1/clientes/";
+const urlPost = `${API_DOMAIN}/api/v1/clientes/`;
 
 export async function postData(
   name: string,

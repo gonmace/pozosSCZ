@@ -21,7 +21,7 @@ let p300: any = [],
   pNegro: any = [];
 
 const colors = ['#ffff00', '#fba657', '#4ade80', '#52b551', '#ff0000', '#00ffff', '#50dbff', '#5eb9fc', '#6199ee', '#808080', 'black'];
-const urlGet = 'http://localhost:8000/api/v1/clientes/';
+const urlGet = 'https://be.pozosscz.com/api/v1/clientes/';
 
 let group300 = layerGroup(),
   group350 = layerGroup(),

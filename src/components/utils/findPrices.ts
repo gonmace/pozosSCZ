@@ -7,6 +7,8 @@ import {
 } from "../../data/waypoints";
 import { fetchOSRM, bases } from "./fetchOSRM";
 
+const API_DOMAIN = import.meta.env.API_DOMAIN;
+
 interface RutasResult {
   paths: Path[];
   distancias: number[];
@@ -73,7 +75,7 @@ let preciosSCZ: Precios = {
 
 export async function getPrices() {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/v1/precios/");
+    const response = await fetch(`${API_DOMAIN}/api/v1/precios/`);
     if (!response.ok) {
       throw new Error(
         `La respuesta de la red no fue exitosa: ${response.statusText}`
@@ -108,7 +110,7 @@ let poligonos: Poligonos[] = [];
 
 export async function getPoligons() {
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/v1/areasfactor/");
+        const response = await fetch(`${API_DOMAIN}/api/v1/areasfactor/`);
         if (!response.ok) {
             throw new Error(
                 `La respuesta de la red no fue exitosa: ${response.statusText}`

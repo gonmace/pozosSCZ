@@ -7,7 +7,7 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-
+const API_DOMAIN = import.meta.env.API_DOMAIN;
 ---
 
 <MainLayout
@@ -41,7 +41,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
         <!-- Campo de entrada para coordenadas del polígono -->
         <form
           id="savePolygon"
-          action="http://127.0.0.1:8000/api/v1/areasfactor/"
+          action=`${API_DOMAIN}/api/v1/areasfactor/`	
           method="POST"
         >
           <div class="input-container text-center">
@@ -233,6 +233,8 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
     import 'leaflet.markercluster';
     import 'leaflet.markercluster.layersupport';
 
+    const API_DOMAIN = import.meta.env.API_DOMAIN;
+
     let marker: Marker;
     const colorPath = ["red", "green", "orange", "cyan"];
     const overlay = document.getElementById("overlay") as HTMLDivElement;
@@ -280,7 +282,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
     const putMarker = document.getElementById("putMarker") as HTMLButtonElement;
     putMarker.disabled = true;
 
-    const areaFact = await fetch("http://127.0.0.1:8000/api/v1/areasfactor/")
+    const areaFact = await fetch(`${API_DOMAIN}/api/v1/areasfactor/`)	
       .then((r) => r.json())
       .then((data: Poligonos[]) => {
         return data;

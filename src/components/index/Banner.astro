@@ -1,16 +1,26 @@
 ---
 
-
 ---
 
-<section id="bgBanner" class="relative w-full mx-auto h-96 sm:h-screen overflow-x-clip">
-  <div id="banner" class="bg-center bg-no-repeat h-full" >/
+<section
+  id="bgBanner"
+  class="relative w-full mx-auto h-96 sm:h-screen overflow-x-clip"
+>
+  <div id="banner" class="bg-center bg-no-repeat h-full">
+    /
     <!-- <img class="w-full absolute top-1/2 transform -translate-y-1/2 opacity-25" src="/public/banner/fotoCristo1.webp"> -->
-    <div class="skeleton w-full absolute top-1/2 transform -translate-y-1/2" style="padding-top: 50%;" ></div>
+    <div
+      class="skeleton w-full absolute top-1/2 transform -translate-y-1/2"
+      style="padding-top: 50%;"
+    >
+    </div>
     <!-- Las imagenes son 1200x600 -->
-     
-    <div class="absolute inset-0 top-2/3 ">
-      <h1 id="titulo" class="overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary">
+
+    <div class="absolute inset-0 top-2/3">
+      <h1
+        id="titulo"
+        class="overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary"
+      >
         LIMPIEZA DE POZOS
       </h1>
     </div>
@@ -68,36 +78,57 @@
 
   <div
     id="contratanos"
-    class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-1">
+    class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-1"
+  >
     <p class="text-lg lg:text-xl">¿ya nos conoces?</p>
     <a
       type="button"
       href="/cotiza"
-      class="btn btn-secondary text-white md:tracking-widest shadow-lg text-lg">
+      class="btn btn-secondary text-white md:tracking-widest shadow-lg text-lg"
+    >
       Contrátanos
     </a>
   </div>
 </section>
 
-
 <script>
   import anime from "animejs";
   import KUTE from "./kute-esm";
+  const API_DOMAIN = import.meta.env.API_DOMAIN;
 
   async function loadBannerData(): Promise<void> {
-    
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/banner/");
-      if (!response.ok) throw new Error("No se pudo obtener la información del banner");
+      const response = await fetch(`${API_DOMAIN}/api/v1/banner/`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          updateBannerContent(
+            "/banner/fotoCristo2.svg",
+            "/banner/fotoCristo1.webp",
+            "Cristo Redentor"
+          );
+          return;
+        } else {
+          throw new Error("Error al obtener los datos del banner");
+        }
+      }
 
       const data = await response.json();
-      if (data.length === 0) throw new Error("No se encontraron datos en la respuesta");
+      if (data.length === 0)
+        throw new Error("No se encontraron datos en la respuesta");
 
       const { svg, img, img_alt } = data[0];
       updateBannerContent(svg, img, img_alt);
     } catch (error) {
-      console.error("Error al obtener los datos del banner, utilizando imágenes de respaldo.", error);
-      updateBannerContent("/banner/fotoCristo2.svg", "/banner/fotoCristo1.webp", "Cristo Redentor");
+      // Mostrar el error solo si no es un 404
+      if (import.meta.env.MODE === "development") {
+        console.error("Error al obtener los datos del banner:", error);
+      }
+      updateBannerContent(
+        "/banner/fotoCristo2.svg",
+        "/banner/fotoCristo1.webp",
+        "Cristo Redentor"
+      );
     }
   }
   function updateBannerContent(svgUrl: string, imgUrl: string, imgAlt: string) {
@@ -108,152 +139,152 @@
     image.src = imgUrl;
     image.alt = imgAlt;
     image.loading = "eager";
-    image.className = "w-full absolute top-1/2 transform -translate-y-1/2 animate-fade animate-duration-2500 animate-delay-2000 animate-ease-out animate-reverse";
+    image.className =
+      "w-full absolute top-1/2 transform -translate-y-1/2 animate-fade animate-duration-2500 animate-delay-2000 animate-ease-out animate-reverse";
 
     const skeleton = document.querySelector(".skeleton.w-full")!;
     skeleton.remove();
     banner.appendChild(image);
   }
-    await loadBannerData();
+  await loadBannerData();
 
-    // Obtén los elementos del DOM y asegúrate de que no sean null
-    const bgBanner = document.getElementById("bgBanner") as HTMLElement;
-    const camion = document.getElementById("camion") as HTMLElement;
-    const titulo = document.getElementById("titulo") as HTMLElement;
+  // Obtén los elementos del DOM y asegúrate de que no sean null
+  const bgBanner = document.getElementById("bgBanner") as HTMLElement;
+  const camion = document.getElementById("camion") as HTMLElement;
+  const titulo = document.getElementById("titulo") as HTMLElement;
 
-    // Asegúrate de que los elementos existen antes de acceder a sus propiedades
-    if (bgBanner && camion && titulo) {
-      const widthBanner = bgBanner.offsetWidth;
-      const heightBanner = bgBanner.offsetHeight;
-      // const widthTitle = titulo.offsetWidth;
-      const widthCamion = camion.offsetWidth;
-      const despCamion = widthBanner - widthCamion;
-      //   const escalaLogo = widthTitle / widthCamion;
-      const escalaLogo = 2;
+  // Asegúrate de que los elementos existen antes de acceder a sus propiedades
+  if (bgBanner && camion && titulo) {
+    const widthBanner = bgBanner.offsetWidth;
+    const heightBanner = bgBanner.offsetHeight;
+    // const widthTitle = titulo.offsetWidth;
+    const widthCamion = camion.offsetWidth;
+    const despCamion = widthBanner - widthCamion;
+    //   const escalaLogo = widthTitle / widthCamion;
+    const escalaLogo = 2;
 
-      // Alinea el camión después de calcular las dimensiones
-      titulo.classList.add("w-full");
+    // Alinea el camión después de calcular las dimensiones
+    titulo.classList.add("w-full");
 
-      // Crea una línea de tiempo para la animación
-      const tl = anime.timeline();
+    // Crea una línea de tiempo para la animación
+    const tl = anime.timeline();
 
-      // Avanza el camión
-      tl.add(
-        {
-          targets: "#camion",
-          translateX: [-widthCamion, despCamion],
-          duration: 4000,
-          easing: "easeOutQuad",
-        },
-        "+=2000"
-      );
-      //   Avanza titulo
-      tl.add(
-        {
-          targets: "#titulo",
-          translateX: ["-100%", "0%"],
-          duration: 4000,
-          easing: "easeOutQuad",
-        },
-        "-=4000"
-      );
-
-      //   Morphing Camion con letras de Santa Cruz
-      tl.add({
+    // Avanza el camión
+    tl.add(
+      {
         targets: "#camion",
-        translateX: despCamion / 2,
-        translateY: -heightBanner/2.5,
-        duration: 3000,
-        easing: "linear",
-        scale: escalaLogo,
-        begin: function () {
-          // Crea un contorno de camion
-          const contorno = document.getElementById("contorno");
-          const tanqueCabina = document.getElementById("tanqueCabina");
-          const llantas = document.getElementById("llantas");
-          const tanqueGas = document.getElementById("tanqueGas");
-          if (contorno && tanqueCabina && llantas && tanqueGas) {
-            KUTE.to(
-              contorno,
-              {
-                path: "#anta",
-                attr: {
-                  fill: "#fff",
-                },
-              },
-              {
-                duration: 3000,
-              }
-            ).start();
-            KUTE.to(
-              tanqueCabina,
-              {
-                path: "#ruz",
-                attr: {
-                  fill: "#fff",
-                },
-              },
-              {
-                duration: 3000,
-              }
-            ).start();
-            KUTE.to(
-              llantas,
-              {
-                path: "#S",
-                attr: {
-                  fill: "#fff",
-                },
-              },
-              {
-                duration: 3000,
-              }
-            ).start();
-            KUTE.to(
-              tanqueGas,
-              {
-                path: "#C",
-                attr: {
-                  fill: "#fff",
-                },
-              },
-              {
-                duration: 3000,
-              }
-            ).start();
-          }
-        },
-        complete: function () {
-          const svg = camion.querySelector("svg") as SVGElement | null;
-          if (svg) {
-            window.addEventListener("resize", function () {
-              let logoPos = svg.getBoundingClientRect();
-              let logoAncho = logoPos.right - logoPos.left;
-              let anchoWindow = window.innerWidth;
-              svg.style.left = `${(anchoWindow - logoAncho) / 2 - logoPos.left}px`;
-            });
-          }
-        },
-      });
+        translateX: [-widthCamion, despCamion],
+        duration: 4000,
+        easing: "easeOutQuad",
+      },
+      "+=2000"
+    );
+    //   Avanza titulo
+    tl.add(
+      {
+        targets: "#titulo",
+        translateX: ["-100%", "0%"],
+        duration: 4000,
+        easing: "easeOutQuad",
+      },
+      "-=4000"
+    );
 
-      tl.add(
-        {
-          targets: "#contratanos",
-          opacity: [0, 1],
-          duration: 2000,
-          easing: "linear",
-        },
-        "-=3000"
-      );
+    //   Morphing Camion con letras de Santa Cruz
+    tl.add({
+      targets: "#camion",
+      translateX: despCamion / 2,
+      translateY: -heightBanner / 2.5,
+      duration: 3000,
+      easing: "linear",
+      scale: escalaLogo,
+      begin: function () {
+        // Crea un contorno de camion
+        const contorno = document.getElementById("contorno");
+        const tanqueCabina = document.getElementById("tanqueCabina");
+        const llantas = document.getElementById("llantas");
+        const tanqueGas = document.getElementById("tanqueGas");
+        if (contorno && tanqueCabina && llantas && tanqueGas) {
+          KUTE.to(
+            contorno,
+            {
+              path: "#anta",
+              attr: {
+                fill: "#fff",
+              },
+            },
+            {
+              duration: 3000,
+            }
+          ).start();
+          KUTE.to(
+            tanqueCabina,
+            {
+              path: "#ruz",
+              attr: {
+                fill: "#fff",
+              },
+            },
+            {
+              duration: 3000,
+            }
+          ).start();
+          KUTE.to(
+            llantas,
+            {
+              path: "#S",
+              attr: {
+                fill: "#fff",
+              },
+            },
+            {
+              duration: 3000,
+            }
+          ).start();
+          KUTE.to(
+            tanqueGas,
+            {
+              path: "#C",
+              attr: {
+                fill: "#fff",
+              },
+            },
+            {
+              duration: 3000,
+            }
+          ).start();
+        }
+      },
+      complete: function () {
+        const svg = camion.querySelector("svg") as SVGElement | null;
+        if (svg) {
+          window.addEventListener("resize", function () {
+            let logoPos = svg.getBoundingClientRect();
+            let logoAncho = logoPos.right - logoPos.left;
+            let anchoWindow = window.innerWidth;
+            svg.style.left = `${(anchoWindow - logoAncho) / 2 - logoPos.left}px`;
+          });
+        }
+      },
+    });
 
-      tl.add({
-        targets: "#wapp",
-        translateY: ["-100%", "0%"],
+    tl.add(
+      {
+        targets: "#contratanos",
         opacity: [0, 1],
-        duration: 1000,
-      });
-    } else {
-      console.error("Uno o más elementos no se encontraron en el DOM.");
-    }
-  
+        duration: 2000,
+        easing: "linear",
+      },
+      "-=3000"
+    );
+
+    tl.add({
+      targets: "#wapp",
+      translateY: ["-100%", "0%"],
+      opacity: [0, 1],
+      duration: 1000,
+    });
+  } else {
+    console.error("Uno o más elementos no se encontraron en el DOM.");
+  }
 </script>

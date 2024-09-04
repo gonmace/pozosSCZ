@@ -10,5 +10,4 @@ export default defineConfig({
   integrations: [icon(), tailwind(), sitemap()],
   output: 'static',
   site: 'https://pozosscz.com',
-
 });
