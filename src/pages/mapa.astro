@@ -41,7 +41,7 @@ const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
         <!-- Campo de entrada para coordenadas del polígono -->
         <form
           id="savePolygon"
-          action=`${API_DOMAIN}/api/v1/areasfactor/`	
+          action=`https://be.pozosscz.com/api/v1/areasfactor/`	
           method="POST"
         >
           <div class="input-container text-center">
@@ -282,7 +282,7 @@ const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
     const putMarker = document.getElementById("putMarker") as HTMLButtonElement;
     putMarker.disabled = true;
 
-    const areaFact = await fetch(`${API_DOMAIN}/api/v1/areasfactor/`)	
+    const areaFact = await fetch(`https://be.pozosscz.com/api/v1/areasfactor/`)	
       .then((r) => r.json())
       .then((data: Poligonos[]) => {
         return data;

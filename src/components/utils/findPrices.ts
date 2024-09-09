@@ -110,7 +110,7 @@ let poligonos: Poligonos[] = [];
 
 export async function getPoligons() {
     try {
-        const response = await fetch(`${API_DOMAIN}/api/v1/areasfactor/`);
+        const response = await fetch(`https://be.pozosscz.com/api/v1/areasfactor/`);
         if (!response.ok) {
             throw new Error(
                 `La respuesta de la red no fue exitosa: ${response.statusText}`
