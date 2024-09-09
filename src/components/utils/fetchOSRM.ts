@@ -33,7 +33,7 @@ export function fetchOSRM(marker: Marker, indice: number) {
       waypoint = ";";
     }
 
-    const url = `http://router.project-osrm.org/route/v1/driving/${lon},${lat}${waypoint}${marker.getLatLng().lng},${marker.getLatLng().lat};${saguapac[1]},${saguapac[0]}?steps=true&geometries=geojson&overview=full&continue_straight=true`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${lon},${lat}${waypoint}${marker.getLatLng().lng},${marker.getLatLng().lat};${saguapac[1]},${saguapac[0]}?steps=true&geometries=geojson&overview=full&continue_straight=true`;
 
     try {
       const resp = await fetch(url);
