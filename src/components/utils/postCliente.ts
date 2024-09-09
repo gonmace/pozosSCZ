@@ -1,5 +1,5 @@
 import { Marker } from "leaflet";
-const API_DOMAIN = import.meta.env.API_DOMAIN;
+const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
 
 const urlPost = `${API_DOMAIN}/api/v1/clientes/`;
 

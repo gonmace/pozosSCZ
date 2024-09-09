@@ -7,7 +7,7 @@ import {
 } from "../../data/waypoints";
 import { fetchOSRM, bases } from "./fetchOSRM";
 
-const API_DOMAIN = import.meta.env.API_DOMAIN;
+const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
 
 interface RutasResult {
   paths: Path[];
