@@ -8,6 +8,8 @@ import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
+import { Image } from 'astro:assets';
+import GDAR from "../../public/GDAR.png";
 ---
 
 <MainLayout
@@ -79,6 +81,9 @@ const API_DOMAIN = import.meta.env.PUBLIC_API_DOMAIN;
               class="btn btn-md btn-secondary !text-white mt-2">
               Agregar Zona a Base de Datos
             </button>
+          </div>
+          <div>
+            <Image src={GDAR} alt="GDAR"/>
           </div>
         </form>
       </div>

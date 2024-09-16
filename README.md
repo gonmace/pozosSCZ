@@ -14,3 +14,4 @@ npm create astro@latest -- --template minimal
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
+4.10.0 para consloe log ninja
